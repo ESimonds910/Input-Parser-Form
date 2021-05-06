@@ -31,7 +31,7 @@ class InputForm:
         self.well_loc = ipw.Text()
         self.std_conc = ipw.Text()
         self.add_stc_button = ipw.Button(description='Add Standard', button_style='info')
-        self.stc_out = ipw.Output()
+        self.stc_out = ipw.Output(layout={'border': '1px solid black'})
         # self.display_standard()
         self.add_stc_button.on_click(self.add_standard)
 
@@ -39,7 +39,7 @@ class InputForm:
             description='Add Project',
             button_style='info'
         )
-        self.output = ipw.Output()
+        self.output = ipw.Output(layout={'border': '1px solid black'})
         self.button_update.on_click(self.on_button_click)
         self.vbox_result = ipw.VBox([self.button_update, self.output])
 
@@ -58,7 +58,8 @@ class InputForm:
             ipw.Label("Check box to indicate if OD file is required:"),
             self.check,
 
-            ipw.Label("Add Standard information here:"),
+            ipw.Label(f"{'-' * 100}"),
+            ipw.HTML(value="<h3><b>*** Add Standard information here ***</b></h3>"),
             ipw.Label("Choose if standard curve was place in row or column:"),
             self.loc,
             ipw.Label("Enter the location of first well used, e.g., A11, or H01:"),
@@ -67,7 +68,8 @@ class InputForm:
             self.std_conc,
             self.add_stc_button,
             self.stc_out,
-
+            ipw.HTML(value="<h5><b>Check inputs for accuracy and add."
+                           " Enter new details for multiple projects or run parser.</b></h5>"),
             self.vbox_result
         )
 
@@ -79,8 +81,15 @@ class InputForm:
 
         proj = self.proj_name.value
         point = self.point_choice.value
-        plate_ids = list(map(str.strip, self.plates.value.split(',')))
-        d_volumes = [float(x) for x in self.d_vols.value.split(',')]
+        if ',' in self.plates.value:
+            plate_ids = list(map(str.strip, self.plates.value.split(',')))
+        else:
+            plate_ids = list(map(str.strip, self.plates.value.split()))
+
+        if ',' in self.d_vols.value:
+            d_volumes = [float(x) for x in self.d_vols.value.split(',')]
+        else:
+            d_volumes = [float(x) for x in self.d_vols.value.split()]
 
         self.proj_dict = {proj: {
             'plates': plate_ids,
@@ -98,13 +107,13 @@ class InputForm:
         self.std_dict_all = {}
 
         with self.output:
-            print('\nProject Updated')
+            print('***  Project Updated  ***')
             for proj, inner in proj_dict_all.items():
                 print(f'\nProject name entered: {proj}\n')
-                print(f"Plate Ids: {', '.join(inner['plates'])}")
-                print(f"Point Scheme: {inner['points']}")
-                print(f"Dilution Volumes: {self.d_vols.value}")
-                print(f"Add OD data: {inner['od_file']}")
+                print(f"Plate Ids: {', '.join(inner['plates'])}\n")
+                print(f"Point Scheme: {inner['points']}\n")
+                print(f"Dilution Volumes: {self.d_vols.value}\n")
+                print(f"Add OD data: {inner['od_file']}\n")
                 for key, value in inner['std_conc'].items():
                     print(f"Well ID: {key}, Standard Concentration: {value}")
         #             for key, value in inner.items():
@@ -113,8 +122,11 @@ class InputForm:
 
     def add_standard(self, event):
         self.stc_out.clear_output()
+        if ',' in self.std_conc.value:
+            std_conc_list = [float(x) for x in self.std_conc.value.split(',')]
+        else:
+            std_conc_list = [float(x) for x in self.std_conc.value.split()]
 
-        std_conc_list = [float(x) for x in self.std_conc.value.split(',')]
         std_conc_list_len = len(std_conc_list)
         if self.loc.value == 'Column':
             col_letter = self.well_loc.value[:1]
@@ -135,6 +147,7 @@ class InputForm:
             std_dict_all.update(std_dict)
         else:
             with self.stc_out:
+                print("*** Standard Updated ***\n")
                 for key, value in self.std_dict_all.items():
                     print(f'Well ID: {key}, Concentration: {value}')
                 print("\nTo add replicate, change well id, or 'column/row' to indicate new standard curve position.\n")
