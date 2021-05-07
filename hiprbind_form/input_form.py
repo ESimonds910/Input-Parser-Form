@@ -122,37 +122,68 @@ class InputForm:
 
     def add_standard(self, event):
         self.stc_out.clear_output()
-        if ',' in self.std_conc.value:
-            std_conc_list = [float(x) for x in self.std_conc.value.split(',')]
+        all_valid = True
+
+        if self.well_loc.value[:1].upper() not in "ABCDEFGH":
+            fix_well = f"{self.well_loc.value[:1].upper()} is invalid. Please fix."
+            all_valid = False
+        elif len(self.well_loc.value[1:]) != 2:
+            fix_well = f"Please enter valid column number between 01 and 12."
+            all_valid = False
+        elif self.well_loc.value[1:] not in [f"{y}".zfill(2) for y in range(1, 13)]:
+            fix_well = f"Please enter valid column number between 01 and 12. Remember, for numbers < 10, use 01 format."
+            all_valid = False
         else:
-            std_conc_list = [float(x) for x in self.std_conc.value.split()]
+            fix_well = "No issues"
 
-        std_conc_list_len = len(std_conc_list)
-        if self.loc.value == 'Column':
-            col_letter = self.well_loc.value[:1]
-            letter_idx = upstr.index(col_letter)
-            col_num = self.well_loc.value[1:]
-            std_ids = [f"{upstr[letter]}{str(col_num).zfill(2)}" for letter in range(letter_idx, std_conc_list_len)]
-            std_dict = (dict(zip(std_ids, std_conc_list)))
+        if ',' in self.std_conc.value:
+            stc_list = self.std_conc.value.split(',')
+        else:
+            stc_list = self.std_conc.value.split()
 
-        elif self.loc.value == 'Row':
-            row_letter = self.well_loc.value[:1]
-            row_num = int(self.well_loc.value[1:])
-            std_ids = [f"{row_letter}{str(num).zfill(2)}" for num in range(row_num, row_num + std_conc_list_len)]
-            std_dict = dict(zip(std_ids, std_conc_list))
         try:
-            self.std_dict_all.update(std_dict)
-        except AttributeError:
-            std_dict_all = {}
-            std_dict_all.update(std_dict)
+            std_conc_list = [float(x) for x in stc_list]
+            fix_conc = "No issues"
+        except ValueError:
+            fix_conc = "Valid number was not added. Check input values."
+            all_valid = False
+
+        if all_valid:
+            std_conc_list_len = len(std_conc_list)
+            if self.loc.value == 'Column':
+                col_letter = self.well_loc.value[:1]
+                letter_idx = upstr.index(col_letter)
+                col_num = self.well_loc.value[1:]
+                std_ids = [f"{upstr[letter]}{str(col_num).zfill(2)}" for letter in range(letter_idx, std_conc_list_len)]
+                std_dict = (dict(zip(std_ids, std_conc_list)))
+
+            elif self.loc.value == 'Row':
+                row_letter = self.well_loc.value[:1]
+                row_num = int(self.well_loc.value[1:])
+                std_ids = [f"{row_letter}{str(num).zfill(2)}" for num in range(row_num, row_num + std_conc_list_len)]
+                std_dict = dict(zip(std_ids, std_conc_list))
+            try:
+                self.std_dict_all.update(std_dict)
+            except AttributeError:
+                std_dict_all = {}
+                std_dict_all.update(std_dict)
+            else:
+                with self.stc_out:
+                    print("*** Standard Updated ***\n")
+                    for key, value in self.std_dict_all.items():
+                        print(f'Well ID: {key}, Concentration: {value}')
+                    print("\nTo add replicate, change well id, or 'column/row' to indicate new standard curve position.\n")
+                return self.std_dict_all
         else:
             with self.stc_out:
-                print("*** Standard Updated ***\n")
-                for key, value in self.std_dict_all.items():
-                    print(f'Well ID: {key}, Concentration: {value}')
-                print("\nTo add replicate, change well id, or 'column/row' to indicate new standard curve position.\n")
-            return self.std_dict_all
-
+                if fix_well == "No issues":
+                    display(ipw.HTML(f"<font color='green'>Well ID: {fix_well}"))
+                else:
+                    display(ipw.HTML(f"<b><font color='red'>Well ID: {fix_well}</b>"))
+                if fix_conc == "No issues":
+                    display(ipw.HTML(f"<font color='green'>Standard concentrations: {fix_conc}"))
+                else:
+                    display(ipw.HTML(f"<b><font color='red'>Standard concentrations: {fix_conc}</b>"))
 
 # class StandardForm(InputForm):
 #
