@@ -89,7 +89,9 @@ class InputForm:
 
         for plate in plate_ids:
             if plate[:1].upper() == "P":
-                if len(plate) != 2:
+                if plate[-1] == '-':
+                    fix_plate = "Add replicate number."
+                elif len(plate) > 3:
                     if "-" in plate:
                         fix_plate = "No issues"
                     else:
