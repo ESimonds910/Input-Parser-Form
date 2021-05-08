@@ -1,6 +1,6 @@
 import ipywidgets as ipw
 from IPython.display import display
-from ipywidgets import interact
+from ipywidgets import Layout
 import plotly.express as px
 from string import ascii_uppercase as upstr
 import json
@@ -21,19 +21,20 @@ class InputForm:
         self.std_dict_all = {}
         with open('parser_data.json', 'w') as parser_file:
             json.dump(self.proj_dict, parser_file, indent=4)
-        self.proj_name = ipw.Text()
+        self.proj_name = ipw.Text(placeholder="e.g. SSFXXXXX or SOMXXXXX")
         self.point_choice = ipw.Dropdown(options=[('Four', 4), ('Eight', 8)])
-        self.plates = ipw.Text()
-        self.d_vols = ipw.Text()
+        self.plates = ipw.Text(placeholder="e.g. P1, P2 or P1-1, P1-2, P2")
+        self.d_vols = ipw.Text(placeholder="e.g. 2, 1, 0.5, 0.25 or 2 1 0.5 0.25")
         self.check = ipw.Checkbox(indent=False)
 
         self.loc = ipw.Dropdown(options=["Column", "Row"])
-        self.well_loc = ipw.Text()
-        self.std_conc = ipw.Text()
+        self.well_loc = ipw.Text(placeholder="e.g. A11 or G01")
+        self.std_conc = ipw.Text(placeholder="e.g. 100, 50, 25 or 100 50 25")
         self.add_stc_button = ipw.Button(description='Add Standard', button_style='info')
         self.stc_out = ipw.Output(layout={'border': '1px solid black'})
         # self.display_standard()
         self.add_stc_button.on_click(self.add_standard)
+        self.vbox_stc_result = ipw.VBox([self.add_stc_button, self.stc_out])
 
         self.button_update = ipw.Button(
             description='Add Project',
@@ -49,7 +50,7 @@ class InputForm:
         display(
             ipw.Label("Enter project name:"),
             self.proj_name,
-            ipw.Label("Enter plate ids for project, e.g., P1-1, P1-2, P2:"),
+            ipw.Label("Enter plate ids for project:"),
             self.plates,
             ipw.Label("Choose four or eight point dilution scheme:"),
             self.point_choice,
@@ -59,15 +60,14 @@ class InputForm:
             self.check,
 
             ipw.Label(f"{'-' * 100}"),
-            ipw.HTML(value="<h3><b>*** Add Standard information here ***</b></h3>"),
-            ipw.Label("Choose if standard curve was place in row or column:"),
+            ipw.HTML(value="<h4><b>*** Add Standard information here: enter replicates separately ***</b></h4>"),
+            ipw.Label("Is the standard curve in a row or a column:"),
             self.loc,
-            ipw.Label("Enter the location of first well used, e.g., A11, or H01:"),
+            ipw.Label("Enter the location of first well used:"),
             self.well_loc,
-            ipw.Label("Enter the standard curve concentrations, match first concentration with well"),
+            ipw.Label("Enter the standard curve concentrations- match first listed concentration with indicated well"),
             self.std_conc,
-            self.add_stc_button,
-            self.stc_out,
+            self.vbox_stc_result,
             ipw.HTML(value="<h5><b>Check inputs for accuracy and add."
                            " Enter new details for multiple projects or run parser.</b></h5>"),
             self.vbox_result
@@ -140,15 +140,18 @@ class InputForm:
             self.std_dict_all = {}
 
             with self.output:
-                print('***  Project Updated  ***')
+                display(ipw.HTML("<b>*** Project Updated ***</b>"))
+                # print('***  Project Updated  ***')
                 for proj, inner in proj_dict_all.items():
-                    print(f'\nProject name entered: {proj}\n')
-                    print(f"Plate Ids: {', '.join(inner['plates'])}\n")
-                    print(f"Point Scheme: {inner['points']}\n")
-                    print(f"Dilution Volumes: {self.d_vols.value}\n")
-                    print(f"Add OD data: {inner['od_file']}\n")
+                    display(ipw.HTML(f"<b>Project name entered:</b> {proj}"),
+                            ipw.HTML(f"<b>Plate Ids:</b> {', '.join(inner['plates'])}"),
+                            ipw.HTML(f"<b>Point Scheme:</b> {inner['points']}"),
+                            ipw.HTML(f"<b>Dilution Volumes:</b> {self.d_vols.value}"),
+                            ipw.HTML(f"<b>Add OD data:</b> {inner['od_file']}"),
+                            ipw.HTML("<b>Standards:</b>"))
                     for key, value in inner['std_conc'].items():
-                        print(f"Well ID: {key}, Standard Concentration: {value}")
+                        labels = ipw.HTML(f"<ul><li style='line-height:1px';><b>Well ID:</b> {key}, <b>Standard Concentration:</b> {value}</li></ul>")
+                        display(labels)
             #             for key, value in inner.items():
             #                 print(f'{key} entered: {value}\n')
             return self.std_dict_all
@@ -212,10 +215,12 @@ class InputForm:
                 std_dict_all.update(std_dict)
             else:
                 with self.stc_out:
-                    print("*** Standard Updated ***\n")
+                    display(ipw.HTML("<b>*** Standard Updated ***</b>"))
                     for key, value in self.std_dict_all.items():
-                        print(f'Well ID: {key}, Concentration: {value}')
-                    print("\nTo add replicate, change well id, or 'column/row' to indicate new standard curve position.\n")
+                        labels = ipw.HTML(
+                            f"<ul><li style='line-height:1px';><b>Well ID:</b> {key}, <b>Standard Concentration:</b> {value}</li></ul>")
+                        display(labels)
+                    display(ipw.HTML("<b>To add replicate, change well id, or 'column/row' to indicate new standard curve position.</b>"))
                 return self.std_dict_all
         else:
             with self.stc_out:
