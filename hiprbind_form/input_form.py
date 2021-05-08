@@ -75,50 +75,91 @@ class InputForm:
 
     def on_button_click(self, event):
         self.output.clear_output()
-
+        all_valid = True
         with open('parser_data.json', 'r') as parser_file:
             proj_dict_all = json.load(parser_file)
 
         proj = self.proj_name.value
         point = self.point_choice.value
+
         if ',' in self.plates.value:
             plate_ids = list(map(str.strip, self.plates.value.split(',')))
         else:
             plate_ids = list(map(str.strip, self.plates.value.split()))
 
+        for plate in plate_ids:
+            if plate[:1].upper() == "P":
+                if len(plate) != 2:
+                    if "-" in plate:
+                        fix_plate = "No issues"
+                    else:
+                        fix_plate = "Specify replicate plate with '-'," \
+                                    " e.g. P1 for non-replicate, or P1-1, P1-2 for replicates."
+                        all_valid = False
+                        break
+                else:
+                    fix_plate = 'No issues'
+            else:
+                fix_plate = "Please write in following format: P1, P2 for plates, or P1-1, P1-2 for replicate plates."
+                all_valid = False
+                break
+
         if ',' in self.d_vols.value:
-            d_volumes = [float(x) for x in self.d_vols.value.split(',')]
+            dvs = self.d_vols.value.split(',')
         else:
-            d_volumes = [float(x) for x in self.d_vols.value.split()]
+            dvs = self.d_vols.value.split()
 
-        self.proj_dict = {proj: {
-            'plates': plate_ids,
-            'points': point,
-            'volumes': d_volumes,
-            'od_file': self.check.value,
-            'std_conc': self.std_dict_all
-        }
-        }
-        proj_dict_all.update(self.proj_dict)
+        try:
+            d_volumes = [float(x) for x in dvs]
+        except ValueError:
+            fix_vols = "Please use a valid number for dilution volumes"
+            all_valid = False
+        else:
+            if len(d_volumes) != self.point_choice.value:
+                fix_vols = "Please use the same number of volumes as points indicated - 4 or 8 points."
+                all_valid = False
+            else:
+                fix_vols = "No issues"
 
-        with open('parser_data.json', 'w') as parser_file:
-            json.dump(proj_dict_all, parser_file, indent=4)
+        if all_valid:
+            self.proj_dict = {proj: {
+                'plates': plate_ids,
+                'points': point,
+                'volumes': d_volumes,
+                'od_file': self.check.value,
+                'std_conc': self.std_dict_all
+            }
+            }
+            proj_dict_all.update(self.proj_dict)
 
-        self.std_dict_all = {}
+            with open('parser_data.json', 'w') as parser_file:
+                json.dump(proj_dict_all, parser_file, indent=4)
 
-        with self.output:
-            print('***  Project Updated  ***')
-            for proj, inner in proj_dict_all.items():
-                print(f'\nProject name entered: {proj}\n')
-                print(f"Plate Ids: {', '.join(inner['plates'])}\n")
-                print(f"Point Scheme: {inner['points']}\n")
-                print(f"Dilution Volumes: {self.d_vols.value}\n")
-                print(f"Add OD data: {inner['od_file']}\n")
-                for key, value in inner['std_conc'].items():
-                    print(f"Well ID: {key}, Standard Concentration: {value}")
-        #             for key, value in inner.items():
-        #                 print(f'{key} entered: {value}\n')
-        return self.std_dict_all
+            self.std_dict_all = {}
+
+            with self.output:
+                print('***  Project Updated  ***')
+                for proj, inner in proj_dict_all.items():
+                    print(f'\nProject name entered: {proj}\n')
+                    print(f"Plate Ids: {', '.join(inner['plates'])}\n")
+                    print(f"Point Scheme: {inner['points']}\n")
+                    print(f"Dilution Volumes: {self.d_vols.value}\n")
+                    print(f"Add OD data: {inner['od_file']}\n")
+                    for key, value in inner['std_conc'].items():
+                        print(f"Well ID: {key}, Standard Concentration: {value}")
+            #             for key, value in inner.items():
+            #                 print(f'{key} entered: {value}\n')
+            return self.std_dict_all
+        else:
+            with self.output:
+                if fix_plate == "No issues":
+                    display(ipw.HTML(f"<font color='green'>Plate IDs: {fix_plate}"))
+                else:
+                    display(ipw.HTML(f"<b><font color='red'>Plate IDs: {fix_plate}</b>"))
+                if fix_vols == "No issues":
+                    display(ipw.HTML(f"<font color='green'>Dilution Volumes: {fix_vols}"))
+                else:
+                    display(ipw.HTML(f"<b><font color='red'>Dilution Volumes: {fix_vols}</b>"))
 
     def add_standard(self, event):
         self.stc_out.clear_output()
