@@ -14,8 +14,6 @@ import hiprbind_parser.enspire_od_join as enspire_od_join
 import hiprbind_parser.pt_calculations as pt_calculations
 from hiprbind_parser.import_od import import_od
 
-# TODO just create separate inputs module
-
 
 class RunParser:
     def __init__(self):
@@ -86,8 +84,11 @@ class RunParser:
                 final_display_df.to_excel(writer, sheet_name="Display_Ready")
                 final_main_rep_df.to_excel(writer, sheet_name="Rep_Calculations")
                 final_display_rep_df.to_excel(writer, sheet_name="Rep_Display_Ready")
-            messagebox.showinfo(title="Congratulations!", message=f"Project {project_title} has been output.")
 
+            window = Tk()
+            window.withdraw()
+            messagebox.showinfo(title="Congratulations!", message=f"Project {project_title} has been output.")
+            window.destroy()
         # Also return these four dataframes into list?
         # clean_df, main_df, clean_rep_df, main_rep_df = test_formatter.data_format(source_df, proj_data)
         # df_list = [clean_df, main_df, clean_rep_df, main_rep_df]
@@ -105,10 +106,46 @@ class RunParser:
 
 if __name__ == "__main__":
     start_time = time()
-    window = Tk()
-    window.withdraw()
-    RunParser().run_main()
-    window.destroy()
+
+    # Test 1 data
+    proj_dict = {
+        "SSF00Test": {
+            "plates": [
+                "P1-1",
+                "P1-2"
+                ],
+            "points": 4,
+            "volumes": [
+                0.071428571,
+                0.003401361,
+                0.00016197,
+                7.71284e-06
+            ],
+            "od_file": True,
+            "std_conc": {
+                "A11": 100.0,
+                "B11": 50.0,
+                "C11": 16.7,
+                "D11": 5.6,
+                "E11": 1.9,
+                "F11": 0.6,
+                "A12": 100.0,
+                "B12": 50.0,
+                "C12": 16.7,
+                "D12": 5.6,
+                "E12": 1.9,
+                "F12": 0.6
+            }
+        }
+    }
+    try:
+        with open(r"C:\Users\esimonds\GitHub\Input-Parser-Form\parser_data.json", "w") as parser_file:
+            json.dump(proj_dict, parser_file, indent=4)
+    except FileNotFoundError:
+        messagebox.showinfo(title="Warning!", message="There's no file, did you complete the parser form?")
+
+    RunParser()
+
     end_time = time()
     split = round(end_time - start_time, 2)
     print(f"Program runtime: {split}s")
