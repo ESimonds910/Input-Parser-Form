@@ -23,7 +23,6 @@ class RunParser:
         self.run_parser_btn = ipw.Button(description='Run parser', button_style='info')
         self.run_parser_btn.on_click(self.run_main)
         display(self.run_parser_btn)
-        self.window.destroy()
 
     def concat_projs(self, df):
         all_projs_df = pd.DataFrame()
@@ -31,64 +30,74 @@ class RunParser:
 
     def run_main(self, event):
         proj_concat = False
+        self.window = Tk()
+        self.window.withdraw()
         try:
-            with open(r"C:\Users\esimonds\GitHub\Input-Parser-Form\parser_data.json", "r") as parser_file:
+            with open(r"parser_data.json", "r") as parser_file:
                 self.proj_data_dict = json.load(parser_file)
+            # with open(r"C:\Users\esimonds\GitHub\Input-Parser-Form\parser_data.json", "r") as parser_file:
+            #     self.proj_data_dict = json.load(parser_file)
         except FileNotFoundError:
+            self.window.withdraw()
             messagebox.showinfo(title="Warning!", message="There's no file, did you complete the parser form?")
-
-        file_finder = FileFinder()
-
-        self.proj_data_dict = fs.split_projects(self.proj_data_dict)
-
-        for proj, inner_dict in self.proj_data_dict.items():
-            project_title = proj
-            if "-" in proj:
-                inner_dict["proj_name"] = proj.split("-")[0]
-                inner_dict["ab_name"] = proj.split("-")[-1]
+            self.window.destroy()
+        else:
+            if self.proj_data_dict == {}:
+                self.window.withdraw()
+                messagebox.showinfo(title="Warning!", message="The file appears to be empty. Complete the input form.")
+                self.window.destroy()
             else:
-                inner_dict["ab_name"] = ""
-                inner_dict["proj_name"] = proj
+                file_finder = FileFinder()
 
-            proj_data = self.proj_data_dict[proj]
+                self.proj_data_dict = fs.split_projects(self.proj_data_dict)
 
-            source_df = file_finder.data_finder(proj_data)
+                for proj, inner_dict in self.proj_data_dict.items():
+                    project_title = proj
+                    if "-" in proj:
+                        inner_dict["proj_name"] = proj.split("-")[0]
+                        inner_dict["ab_name"] = proj.split("-")[-1]
+                    else:
+                        inner_dict["ab_name"] = ""
+                        inner_dict["proj_name"] = proj
 
-            df_list = formatter.data_format(source_df, proj_data)
+                    proj_data = self.proj_data_dict[proj]
 
-            if proj_data["od_file"]:
-                raw_od = import_od(proj_data)
-                joined_df_list = enspire_od_join.join_dfs(df_list, raw_od, proj_data)
-                main_join_dfs = joined_df_list[:2]
-                final_display_df = joined_df_list[2]
-                final_display_rep_df = joined_df_list[3]
-                completed_main_dfs = pt_calculations.make_calculations(main_join_dfs, proj_data)
-            else:
-                main_dfs = df_list[:2]
-                final_display_df = df_list[2]
-                final_display_rep_df = df_list[3]
-                completed_main_dfs = pt_calculations.make_calculations(main_dfs, proj_data)
+                    source_df = file_finder.data_finder(proj_data)
 
-            final_main_df = completed_main_dfs[0]
-            final_main_rep_df = completed_main_dfs[1]
+                    df_list = formatter.data_format(source_df, proj_data)
 
-            window = Tk()
-            window.withdraw()
-            output_path = askdirectory(
-                title="Choose folder to place output file for " + project_title,
-                initialdir='L:/Molecular Sciences/Small Scale Runs'
-            )
-            window.destroy()
-            with pd.ExcelWriter(f"{output_path}/{project_title}_output.xlsx") as writer:
-                final_main_df.to_excel(writer, sheet_name="Calculations")
-                final_display_df.to_excel(writer, sheet_name="Display_Ready")
-                final_main_rep_df.to_excel(writer, sheet_name="Rep_Calculations")
-                final_display_rep_df.to_excel(writer, sheet_name="Rep_Display_Ready")
+                    if proj_data["od_file"]:
+                        raw_od = import_od(proj_data)
+                        joined_df_list = enspire_od_join.join_dfs(df_list, raw_od, proj_data)
+                        main_join_dfs = joined_df_list[:2]
+                        final_display_df = joined_df_list[2]
+                        final_display_rep_df = joined_df_list[3]
+                        completed_main_dfs = pt_calculations.make_calculations(main_join_dfs, proj_data)
+                    else:
+                        main_dfs = df_list[:2]
+                        final_display_df = df_list[2]
+                        final_display_rep_df = df_list[3]
+                        completed_main_dfs = pt_calculations.make_calculations(main_dfs, proj_data)
 
-            window = Tk()
-            window.withdraw()
-            messagebox.showinfo(title="Congratulations!", message=f"Project {project_title} has been output.")
-            window.destroy()
+                    final_main_df = completed_main_dfs[0]
+                    final_main_rep_df = completed_main_dfs[1]
+
+                    self.window.withdraw()
+                    output_path = askdirectory(
+                        title="Choose folder to place output file for " + project_title,
+                        initialdir='L:/Molecular Sciences/Small Scale Runs'
+                    )
+                    self.window.destroy()
+                    with pd.ExcelWriter(f"{output_path}/{project_title}_output.xlsx") as writer:
+                        final_main_df.to_excel(writer, sheet_name="Calculations")
+                        final_display_df.to_excel(writer, sheet_name="Display_Ready")
+                        final_main_rep_df.to_excel(writer, sheet_name="Rep_Calculations")
+                        final_display_rep_df.to_excel(writer, sheet_name="Rep_Display_Ready")
+
+                    self.window = Tk()
+                    self.window.withdraw()
+                    messagebox.showinfo(title="Congratulations!", message=f"Project {project_title} has been output.")
+                    self.window.destroy()
         # Also return these four dataframes into list?
         # clean_df, main_df, clean_rep_df, main_rep_df = test_formatter.data_format(source_df, proj_data)
         # df_list = [clean_df, main_df, clean_rep_df, main_rep_df]

@@ -42,6 +42,8 @@ def import_od(proj_data):
     except xlrd.XLRDError:
         try:
             od_data = pd.read_excel(input_od_path)
+        except xlrd.XLRDError:
+            od_data = pd.read_csv(input_od_path)
         except FileNotFoundError:
             messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
             pass
