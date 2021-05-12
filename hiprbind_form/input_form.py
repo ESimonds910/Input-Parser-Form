@@ -81,6 +81,11 @@ class InputForm:
             proj_dict_all = json.load(parser_file)
 
         proj = self.proj_name.value
+        if proj == "":
+            fix_proj = "This field cannot be blank."
+            all_valid = False
+        else:
+            fix_proj = "No issues"
         point = self.point_choice.value
 
         if ',' in self.plates.value:
@@ -88,24 +93,31 @@ class InputForm:
         else:
             plate_ids = list(map(str.strip, self.plates.value.upper().split()))
 
-        for plate in plate_ids:
-            if plate[:1].upper() == "P":
-                if plate[-1] == '-':
-                    fix_plate = "Add replicate number."
-                elif len(plate) > 3:
-                    if "-" in plate:
-                        fix_plate = "No issues"
-                    else:
-                        fix_plate = "Specify replicate plate with '-'," \
-                                    " e.g. P1 for non-replicate, or P1-1, P1-2 for replicates."
+        if self.plates.value == "":
+            fix_plate = "This field cannot be blank."
+            all_valid = False
+        else:
+            fix_plate = "No issues"
+            for plate in plate_ids:
+                if plate[:1].upper() == "P":
+                    if plate[-1] == '-':
+                        fix_plate = "Add replicate number."
                         all_valid = False
                         break
+                    elif len(plate) > 3:
+                        if "-" in plate:
+                            fix_plate = "No issues"
+                        else:
+                            fix_plate = "Specify replicate plate with '-'," \
+                                        " e.g. P1 for non-replicate, or P1-1, P1-2 for replicates."
+                            all_valid = False
+                            break
+                    else:
+                        fix_plate = 'No issues'
                 else:
-                    fix_plate = 'No issues'
-            else:
-                fix_plate = "Please write in following format: P1, P2 for plates, or P1-1, P1-2 for replicate plates."
-                all_valid = False
-                break
+                    fix_plate = "Please write in following format: P1, P2 for plates, or P1-1, P1-2 for replicate plates."
+                    all_valid = False
+                    break
 
         if ',' in self.d_vols.value:
             dvs = self.d_vols.value.split(',')
@@ -163,6 +175,10 @@ class InputForm:
         else:
             with self.output:
                 display(ipw.HTML("<h4><u><b>Please resolve the issues listed below!</b></u></h4>"))
+                if fix_proj == "No issues":
+                    display(ipw.HTML(f"<b>Project name: <font color='green'>{fix_proj}</b>"))
+                else:
+                    display(ipw.HTML(f"<b>Project name: <font color='red'>{fix_proj}</b>"))
                 if fix_plate == "No issues":
                     display(ipw.HTML(f"<b>Plate IDs: <font color='green'>{fix_plate}</b>"))
                 else:
