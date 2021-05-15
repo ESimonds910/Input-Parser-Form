@@ -36,12 +36,19 @@ def split_projects(proj_dict):
                             for row in plate_rows:
                                 csv_writer.writerow(row)
 
-                        inner_dict["raw_file"] = raw_output
+                    inner_dict["raw_file"] = raw_output
 
-                        messagebox.showinfo(title="Congrats!", message="File has been moved!")
-                        window.destroy()
+                else:
+                    file_path_raw = "end"
+                    return file_path_raw
 
-                        return proj_dict
+        messagebox.showinfo(title="Congrats!", message="File has been moved!")
+        window.destroy()
+
+        return proj_dict
+    else:
+        file_path_raw = "end"
+        return file_path_raw
 
 
 if __name__ == "__main__":

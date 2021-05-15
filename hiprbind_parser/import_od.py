@@ -22,54 +22,58 @@ def import_od(proj_data):
     window.withdraw()
     od_data = pd.DataFrame()
     input_od_path = askopenfilename(title="Choose OD file.")
-    try:
-        od_data = pd.read_excel(input_od_path, sheet_name="Growth Details")
-    except FileNotFoundError:
-        messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
-        pass
-    except KeyError:
+    if input_od_path:
         try:
-            od_data = pd.read_excel(input_od_path)
+            od_data = pd.read_excel(input_od_path, sheet_name="Growth Details")
         except FileNotFoundError:
             messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
             pass
-    except ValueError:
-        try:
-            od_data = pd.read_csv(input_od_path)
-        except FileNotFoundError:
-            messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
-            pass
-    except xlrd.XLRDError:
-        try:
-            od_data = pd.read_excel(input_od_path)
-        except xlrd.XLRDError:
-            od_data = pd.read_csv(input_od_path)
-        except FileNotFoundError:
-            messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
-            pass
-    if not od_data.empty:
-        try:
-            for column in od_data.columns[1:]:
-                if " " in column:
-                    new_column = column.strip().replace(" ", "_").lower().capitalize()
-                else:
-                    new_column = column.strip().lower().capitalize()
-                od_data.rename(columns={column: new_column}, inplace=True)
-            od_data.dropna(thresh=3, subset=od_data.columns[:-1], inplace=True)
-            od_data.dropna(axis=1, how="all", inplace=True)
-            col_header = "Od600"
-            od_data[col_header] = od_data[col_header].replace(" ", "0.0")
-            col_header = "Harvest_sample_id"
-            od_data.set_index(col_header, drop=False, inplace=True)
         except KeyError:
-            print(f"Parser was looking for column '{col_header}', but was not found. Check file for missing column.")
-            pass
-        finally:
-            # header_check(od_data.columns)
-            window.destroy()
-            return od_data
+            try:
+                od_data = pd.read_excel(input_od_path)
+            except FileNotFoundError:
+                messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
+                pass
+        except ValueError:
+            try:
+                od_data = pd.read_csv(input_od_path)
+            except FileNotFoundError:
+                messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
+                pass
+        except xlrd.XLRDError:
+            try:
+                od_data = pd.read_excel(input_od_path)
+            except xlrd.XLRDError:
+                od_data = pd.read_csv(input_od_path)
+            except FileNotFoundError:
+                messagebox.showinfo(title="Uh oh...", message="Something's wrong. The OD file wasn't found.")
+                pass
+        if not od_data.empty:
+            try:
+                for column in od_data.columns[1:]:
+                    if " " in column:
+                        new_column = column.strip().replace(" ", "_").lower().capitalize()
+                    else:
+                        new_column = column.strip().lower().capitalize()
+                    od_data.rename(columns={column: new_column}, inplace=True)
+                od_data.dropna(thresh=3, subset=od_data.columns[:-1], inplace=True)
+                od_data.dropna(axis=1, how="all", inplace=True)
+                col_header = "Od600"
+                od_data[col_header] = od_data[col_header].replace(" ", "0.0")
+                col_header = "Harvest_sample_id"
+                od_data.set_index(col_header, drop=False, inplace=True)
+            except KeyError:
+                print(f"Parser was looking for column '{col_header}', but was not found. Check file for missing column.")
+                pass
+            finally:
+                # header_check(od_data.columns)
+                window.destroy()
+                return od_data
+        else:
+            messagebox.showinfo(title="Uh oh...", message="Something's wrong, there is no OD data. Check OD File.")
+            return "end"
     else:
-        messagebox.showinfo(title="Uh oh...", message="Something's wrong, there is no OD data. Check OD File.")
+        return "end"
 
 
 if __name__ == "__main__":
