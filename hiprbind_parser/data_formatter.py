@@ -5,7 +5,7 @@ from string import ascii_uppercase as letters
 
 def find_replicate_data(df):
     df["Replicate"] = np.where(
-        df["Plate"].apply(lambda x: len(x) > 2 and int(x[-1:])) > 1,
+        df["Plate"].apply(lambda x: '-' in x and int(x[-1:])) > 1,
         "replicate", ""
     )
 
