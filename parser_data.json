@@ -1,31 +1,40 @@
 {
-    "SSF00644": {
+    "SSF00646": {
         "plates": [
             "P1-1",
-            "P1-2",
-            "P2",
-            "P3",
-            "P4",
-            "P5",
-            "P6",
-            "P7",
-            "P8",
-            "P9",
-            "P10",
-            "P11",
-            "P12",
-            "P13",
-            "P14-1",
-            "P14-2"
+            "P1-2"
         ],
         "points": 4,
         "volumes": [
-            0.857142857,
-            0.12244898,
-            0.006444683,
-            0.000339194
+            3.0,
+            2.0,
+            1.0,
+            1.0
         ],
         "od_file": true,
-        "std_conc": {}
+        "std_conc": {},
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00646.csv",
+        "ab_name": "",
+        "proj_name": "SSF00646",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00646_output.xlsx"
+    },
+    "SSF00647": {
+        "plates": [
+            "P1-1",
+            "P1-2"
+        ],
+        "points": 4,
+        "volumes": [
+            3.0,
+            2.0,
+            1.0,
+            1.0
+        ],
+        "od_file": true,
+        "std_conc": {},
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00647.csv",
+        "ab_name": "",
+        "proj_name": "SSF00647",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00647_output.xlsx"
     }
 }

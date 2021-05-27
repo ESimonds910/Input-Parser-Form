@@ -19,6 +19,7 @@ class RunParser:
     def __init__(self):
         self.window = Tk()
         self.window.withdraw()
+        self.ended = False
         self.proj_data_dict = {}
         self.run_parser_btn = ipw.Button(description='Run parser', button_style='info')
         self.run_parser_btn.on_click(self.run_main)
@@ -40,11 +41,13 @@ class RunParser:
         except FileNotFoundError:
             self.window.withdraw()
             messagebox.showinfo(title="Warning!", message="There's no file, did you complete the parser form?")
+            self.ended = True
             self.window.destroy()
         else:
             if self.proj_data_dict == {}:
                 self.window.withdraw()
                 messagebox.showinfo(title="Warning!", message="The file appears to be empty. Complete the input form.")
+                self.ended = True
                 self.window.destroy()
             else:
                 file_finder = FileFinder()
@@ -75,6 +78,7 @@ class RunParser:
                                 final_display_rep_df = joined_df_list[3]
                                 completed_main_dfs = pt_calculations.make_calculations(main_join_dfs, proj_data)
                             else:
+                                self.ended = True
                                 break
                         else:
                             main_dfs = df_list[:2]
@@ -92,7 +96,9 @@ class RunParser:
                         )
 
                         if output_path:
-                            with pd.ExcelWriter(f"{output_path}/{project_title}_output.xlsx") as writer:
+                            final_out_path = f"{output_path}/{project_title}_output.xlsx"
+                            inner_dict["out_path"] = final_out_path
+                            with pd.ExcelWriter(final_out_path) as writer:
                                 final_main_df.to_excel(writer, sheet_name="Calculations")
                                 final_display_df.to_excel(writer, sheet_name="Display_Ready")
                                 final_main_rep_df.to_excel(writer, sheet_name="Rep_Calculations")
@@ -101,7 +107,15 @@ class RunParser:
                             self.window = Tk()
                             self.window.withdraw()
                             messagebox.showinfo(title="Congratulations!", message=f"Project {project_title} has been output.")
+
                     self.window.destroy()
+                else:
+                    self.ended = True
+        
+        if not self.ended:
+            print("This worked")
+            with open("parser_data.json", "w") as update_parser_file:
+                json.dump(self.proj_data_dict, update_parser_file, indent=4)
         # Also return these four dataframes into list?
         # clean_df, main_df, clean_rep_df, main_rep_df = test_formatter.data_format(source_df, proj_data)
         # df_list = [clean_df, main_df, clean_rep_df, main_rep_df]
