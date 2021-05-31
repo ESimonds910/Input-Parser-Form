@@ -1,24 +1,18 @@
 {
-    "SSF00646": {
+    "SSF00648a-ReceptorAntibody": {
         "plates": [
             "P1-1",
             "P1-2"
         ],
         "points": 4,
         "volumes": [
-            0.857142857,
-            0.12244898,
-            0.006444683,
-            0.000339194
+            0.947368421,
+            0.149584488,
+            0.016620499,
+            0.000977676
         ],
         "od_file": true,
         "std_conc": {
-            "A11": 30.0,
-            "B11": 10.0,
-            "C11": 3.3,
-            "D11": 1.1,
-            "E11": 0.4,
-            "F11": 0.1,
             "A12": 30.0,
             "B12": 10.0,
             "C12": 3.3,
@@ -26,9 +20,87 @@
             "E12": 0.4,
             "F12": 0.1
         },
-        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00646.csv",
-        "ab_name": "",
-        "proj_name": "SSF00646",
-        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00646_output.xlsx"
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00648a-ReceptorAntibody.csv",
+        "proj_name": "SSF00648a",
+        "ab_name": "ReceptorAntibody",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00648a-ReceptorAntibody_output.xlsx"
+    },
+    "SSF00648a-AntibodyAntiboody": {
+        "plates": [
+            "P1-1",
+            "P1-2"
+        ],
+        "points": 4,
+        "volumes": [
+            0.947368421,
+            0.149584488,
+            0.016620499,
+            0.000977676
+        ],
+        "od_file": true,
+        "std_conc": {
+            "A12": 30.0,
+            "B12": 10.0,
+            "C12": 3.3,
+            "D12": 1.1,
+            "E12": 0.4,
+            "F12": 0.1
+        },
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00648a-AntibodyAntiboody.csv",
+        "proj_name": "SSF00648a",
+        "ab_name": "AntibodyAntiboody",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00648a-AntibodyAntiboody_output.xlsx"
+    },
+    "SSF00648b-ReceptorAntibody": {
+        "plates": [
+            "P1-1",
+            "P1-2"
+        ],
+        "points": 4,
+        "volumes": [
+            0.947368421,
+            0.149584488,
+            0.016620499,
+            0.000977676
+        ],
+        "od_file": true,
+        "std_conc": {
+            "A12": 30.0,
+            "B12": 10.0,
+            "C12": 3.3,
+            "D12": 1.1,
+            "E12": 0.4,
+            "F12": 0.1
+        },
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00648b-ReceptorAntibody.csv",
+        "proj_name": "SSF00648b",
+        "ab_name": "ReceptorAntibody",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00648b-ReceptorAntibody_output.xlsx"
+    },
+    "SSF00648b-AntibodyAntibody": {
+        "plates": [
+            "P1-1",
+            "P1-2"
+        ],
+        "points": 4,
+        "volumes": [
+            0.947368421,
+            0.149584488,
+            0.016620499,
+            0.000977676
+        ],
+        "od_file": true,
+        "std_conc": {
+            "A12": 30.0,
+            "B12": 10.0,
+            "C12": 3.3,
+            "D12": 1.1,
+            "E12": 0.4,
+            "F12": 0.1
+        },
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00648b-AntibodyAntibody.csv",
+        "proj_name": "SSF00648b",
+        "ab_name": "AntibodyAntibody",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00648b-AntibodyAntibody_output.xlsx"
     }
 }

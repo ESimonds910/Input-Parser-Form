@@ -114,7 +114,6 @@ class RunParser:
                     self.ended = True
         
         if not self.ended:
-            print("This worked")
             with open("parser_data.json", "w") as update_parser_file:
                 json.dump(self.proj_data_dict, update_parser_file, indent=4)
             data_analysis.DataAnalysis(self.proj_data_dict)
