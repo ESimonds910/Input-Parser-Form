@@ -16,11 +16,6 @@ STYLE = {"description_width": "initial"}
 class DataAnalysis:
     def __init__(self, dict):
         self.parser_data_dict = dict
-        self.full_calcs_df = pd.DataFrame()
-        self.full_display_df = pd.DataFrame()
-        self.full_calcs_rep_df = pd.DataFrame()
-        self.full_display_rep_df = pd.DataFrame()
-
         self.proj_list = [proj for proj in self.parser_data_dict.keys()]
         self.proj_choice = ipw.Dropdown(options=self.proj_list)
         self.show_data_vis = ipw.Button(description="Show Visuals", button_style="info")
@@ -41,7 +36,14 @@ class DataAnalysis:
 
     def build_display(self, event):
         # proj chosen from dropdown
-        display(ipw.HTML("<b>Please be patient while I load!</b>"))
+        self.chart_1_out.clear_output()
+        self.chart_2_out.clear_output()
+
+        full_calcs_df = pd.DataFrame()
+        full_display_df = pd.DataFrame()
+        full_calcs_rep_df = pd.DataFrame()
+        full_display_rep_df = pd.DataFrame()
+
         proj_name = self.proj_choice.value
         file_path = self.parser_data_dict[proj_name]["out_path"]
         calcs_df = pd.read_excel(file_path, index_col=0, sheet_name="Calculations")
@@ -49,14 +51,14 @@ class DataAnalysis:
         calcs_reps_df = pd.read_excel(file_path, index_col=0, sheet_name="Rep_Calculations")
         display_reps_df = pd.read_excel(file_path, index_col=0, sheet_name="Rep_Display_Ready")
 
-        self.full_calcs_df = pd.concat([self.full_calcs_df, calcs_df])
-        self.full_display_df = pd.concat([self.full_display_df, display_df])
+        full_calcs_df = pd.concat([full_calcs_df, calcs_df])
+        full_display_df = pd.concat([full_display_df, display_df])
 
-        self.full_calcs_rep_df = pd.concat([self.full_calcs_rep_df, calcs_reps_df])
-        self.full_display_rep_df = pd.concat([self.full_display_rep_df, display_reps_df])
+        full_calcs_rep_df = pd.concat([full_calcs_rep_df, calcs_reps_df])
+        full_display_rep_df = pd.concat([full_display_rep_df, display_reps_df])
 
-        stacked_calcs_df = pd.concat([self.full_calcs_df, self.full_calcs_rep_df])
-        stacked_display_df = pd.concat([self.full_display_df, self.full_display_rep_df])
+        stacked_calcs_df = pd.concat([full_calcs_df, full_calcs_rep_df])
+        stacked_display_df = pd.concat([full_display_df, full_display_rep_df])
 
         stacked_display_df.dropna(subset=["Sample_type"], how='any', inplace=True)
 
@@ -91,6 +93,7 @@ class DataAnalysis:
                 print("\nChoose a different columns! These values don't look right.")
 
         with self.chart_1_out:
+            display(ipw.HTML("<b>Please be patient while I load!</b>"))
             trace_plot = ipw.interactive(create_traces, column_name=column_name)
             display(trace_plot)
 
