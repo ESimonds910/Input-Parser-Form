@@ -22,6 +22,7 @@ class DataAnalysis:
         self.data_vis = ipw.Output()
         self.chart_1_out = ipw.Output(layout={'border': '1px solid black'})
         self.chart_2_out = ipw.Output(layout={'border': '1px solid black'})
+        self.chart_3_out = ipw.Output(layout={'border': '1px solid black'})
         self.vbox_data_vis = ipw.VBox([self.proj_choice, self.show_data_vis])
         self.choose_proj()
         self.show_data_vis.on_click(self.build_display)
@@ -32,12 +33,13 @@ class DataAnalysis:
     #         self.parser_data_dict = json.load(parserfile)
 
     def choose_proj(self):
-        display(self.vbox_data_vis, self.chart_1_out, self.chart_2_out)
+        display(self.vbox_data_vis, self.chart_1_out, self.chart_2_out, self.chart_3_out)
 
     def build_display(self, event):
         # proj chosen from dropdown
         self.chart_1_out.clear_output()
         self.chart_2_out.clear_output()
+        self.chart_3_out.clear_output()
 
         full_calcs_df = pd.DataFrame()
         full_display_df = pd.DataFrame()
@@ -75,6 +77,13 @@ class DataAnalysis:
             description="Choose a plate",
             style=STYLE,
             value=plate_list[0])
+
+        corr_plate_list = list(stacked_display_df["Plate"].apply(lambda x: x.split('-')[0]).unique())
+        corr_plate = ipw.Dropdown(
+            options=corr_plate_list,
+            description="Choose a plate",
+            style=STYLE,
+            value=corr_plate_list[0])
 
         def create_traces(column_name):
             try:
@@ -118,3 +127,28 @@ class DataAnalysis:
         with self.chart_2_out:
             trace_byplate_plot = ipw.interactive(create_byplate_traces, plate=plate)
             display(trace_byplate_plot)
+
+        def check_replicates(corr_plate):
+            corr_plate_df = stacked_display_df[stacked_display_df["Plate"].str.startswith(corr_plate)]
+            sample_type = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)][
+                "Sample_type"].values
+            well_id = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)]["Well_Id"].values
+            main_alpha = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)]["Alpha"].values
+            rep_alpha = corr_plate_df[corr_plate_df["Plate"].str.contains("-2", case=False)]["Alpha"].values
+            try:
+                corr_plot = px.scatter(x=main_alpha, y=rep_alpha, color=sample_type)
+                corr_plot.update_xaxes(title='Main', tickangle=45, tickfont=dict(size=8), title_font=dict(size=10))
+                corr_plot.update_yaxes(title='Replicate', tickangle=45, tickfont=dict(size=8), title_font=dict(size=10))
+                corr_plot.show()
+                pcorr, pvalue = stats.pearsonr(main_alpha, rep_alpha)
+                corr_coef_disp = ipw.HTML(f"<b>Correlation Coefficient:</b> {pcorr}, <b>p-value:</b> {pvalue}")
+            except KeyError:
+                print("\nThis one doesn't work.")
+            except ValueError:
+                print("\nThese values don't look right.")
+            else:
+                display(corr_coef_disp)
+
+        with self.chart_3_out:
+            corr_plate_plot = ipw.interactive(check_replicates, corr_plate=corr_plate)
+            display(corr_plate_plot)
