@@ -16,25 +16,10 @@
             "A12": 100.0,
             "B12": 50.0,
             "C12": 25.0
-        }
-    },
-    "SSF00646": {
-        "plates": [
-            "P1-1",
-            "P1-2"
-        ],
-        "points": 4,
-        "volumes": [
-            4.0,
-            3.0,
-            2.0,
-            1.0
-        ],
-        "od_file": true,
-        "std_conc": {
-            "A12": 100.0,
-            "B12": 50.0,
-            "C12": 25.0
-        }
+        },
+        "raw_file": "//asb-nasrack01/users/esimonds/Desktop/SSF00648.csv",
+        "ab_name": "",
+        "proj_name": "SSF00648",
+        "out_path": "//asb-nasrack01/users/esimonds/Desktop/SSF00648_output.xlsx"
     }
 }

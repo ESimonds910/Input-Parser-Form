@@ -99,25 +99,35 @@ class InputForm:
         else:
             fix_plate = "No issues"
             for plate in plate_ids:
-                if plate[:1].upper() == "P":
-                    if plate[-1] == '-':
-                        fix_plate = "Add replicate number."
-                        all_valid = False
-                        break
-                    elif len(plate) > 3:
-                        if "-" in plate:
-                            fix_plate = "No issues"
-                        else:
-                            fix_plate = "Specify replicate plate with '-'," \
-                                        " e.g. P1 for non-replicate, or P1-1, P1-2 for replicates."
-                            all_valid = False
-                            break
-                    else:
-                        fix_plate = 'No issues'
-                else:
-                    fix_plate = "Please write in following format: P1, P2 for plates, or P1-1, P1-2 for replicate plates."
+                valid_list = [False for char in plate if char not in 'p P 1 2 3 4 5 6 7 8 9 0 -'.split()]
+                if False in valid_list:
+                    fix_plate = f"Something doesn't match in plate {plate}"
                     all_valid = False
                     break
+                else:
+                    if plate[:1].upper() == "P":
+                        if plate[-1] == '-':
+                            fix_plate = "Add replicate number."
+                            all_valid = False
+                            break
+                        elif "P" in plate[1:] or len(plate) < 2 or not isinstance(int(plate[1]), int) or not isinstance(int(plate[-1]), int):
+                            fix_plate = f"Second or last character in {plate} is not an integer"
+                            all_valid = False
+                            break
+                        elif len(plate) > 3:
+                            if "-" in plate:
+                                fix_plate = "No issues"
+                            else:
+                                fix_plate = "Specify replicate plate with '-'," \
+                                            " e.g. P1 for non-replicate, or P1-1, P1-2 for replicates."
+                                all_valid = False
+                                break
+                        else:
+                            fix_plate = 'No issues'
+                    else:
+                        fix_plate = "Please write in following format: P1, P2 for plates, or P1-1, P1-2 for replicate plates."
+                        all_valid = False
+                        break
 
         if ',' in self.d_vols.value:
             dvs = self.d_vols.value.split(',')
@@ -159,7 +169,7 @@ class InputForm:
                     p_name_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Project name entered:</b></span> {proj}")
                     p_id_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Plate Ids:</b></span> {', '.join(inner['plates'])}")
                     points_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Point Scheme:</b></span> {inner['points']}")
-                    dv_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Dilution Volumes:</b></span> {self.d_vols.value}")
+                    dv_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Dilution Volumes:</b></span> {', '.join([str(x) for x in inner['volumes']])}")
                     od_text = ipw.HTML(f"<span style='color: #7EAA31';><b>Add OD data:</b></span> {inner['od_file']}")
                     std_text = ipw.HTML("<span style='color: #7EAA31';><b>Standards:</b></span>")
                     display_box = ipw.VBox([p_name_text, p_id_text, points_text, dv_text, od_text, std_text])
