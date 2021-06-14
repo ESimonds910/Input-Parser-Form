@@ -8,6 +8,7 @@ from IPython.display import display
 from tkinter.filedialog import askopenfilename, askdirectory
 from string import ascii_uppercase as upstr
 from hiprbind_analysis import data_analysis
+from hiprbind_dashboard import main
 import hiprbind_parser.file_split as fs
 from hiprbind_parser.import_csv import FileFinder
 import hiprbind_parser.data_formatter as formatter
@@ -116,7 +117,10 @@ class RunParser:
         if not self.ended:
             with open("parser_data.json", "w") as update_parser_file:
                 json.dump(self.proj_data_dict, update_parser_file, indent=4)
-            data_analysis.DataAnalysis(self.proj_data_dict)
+            # data_analysis.DataAnalysis(self.proj_data_dict)
+            main.BuildDashboard(self.proj_data_dict)
+
+
         # Also return these four dataframes into list?
         # clean_df, main_df, clean_rep_df, main_rep_df = test_formatter.data_format(source_df, proj_data)
         # df_list = [clean_df, main_df, clean_rep_df, main_rep_df]
