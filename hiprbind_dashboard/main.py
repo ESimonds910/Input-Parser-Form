@@ -1,25 +1,42 @@
+# import required packages to build dashboard
 import dash
 import dash_html_components as html
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output
+from dash.exceptions import PreventUpdate
+
+# import packages required to build graphs
 import plotly.graph_objects as go
 import plotly.express as px
-from dash.dependencies import Input, Output
+
+# import packages to create dataframes for data and statistical analysis
 import pandas as pd
 from scipy import stats
-import ipywidgets as ipw
-from IPython import display
+import json
 
 
 class BuildDashboard:
+    """
+    This class is called by /hiprbind_parser/control_main.py, which is run after a button click from the input form.
+    This class is used to visual the project(s) data output by the data parser.
+
+    """
     def __init__(self, proj_dict):
+        """
+
+        :param proj_dict: This dictionary is passed into the function by the data parser, and contains
+        the data input from the input form for each project entered.
+
+        """
+        # This line creates the Dash app and uses bootstrap to provide style to the visual layout.
+        # external_stylesheets is not necessary for the success of the app, only dash.Dash()
         self.app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
         self.parser_data_dict = proj_dict
-        # self.file_path = r"L:\High Throughput Screening\Strain Screening Funnel (SSF)\SSF_Experiments\SSF00655 DSS Sheepdog004 Discrete host screening\Assays\HiPrBind\Processed\SSF00655_output.xlsx"
 
-        # working_proj = self.grab_project()
-
+        # The following loop will import the outputted project(s) data, and create one dataframe
+        # formatted for data visualization - all_stacked_df.
         self.all_stacked_df = pd.DataFrame()
         for proj, inner in self.parser_data_dict.items():
             self.file_path = inner["out_path"]
@@ -33,48 +50,34 @@ class BuildDashboard:
 
             self.stacked_display_df.dropna(subset=["Sample_type"], how='any', inplace=True)
             self.all_stacked_df = pd.concat([self.stacked_display_df, self.all_stacked_df])
-        # try:
-        #     self.proj_name = self.stacked_display_df['SSF_exp'].unique()[0]
-        #
-        # except KeyError:
-        #     print("No ID")
 
+        # This function is called once the dataframe is ready to create the interactive Dashboard
         self.build_display()
 
-    # Grab project
-    # def grab_project(self):
-    #     proj_options = [{'label': proj, 'value': proj} for proj in self.parser_data_dict.keys()]
-    #     self.app.layout = html.Div([
-    #         html.H1(id='proj-header'),
-    #         dcc.Dropdown(id='proj-picker', options=proj_options, value=proj_options[0])
-    #     ])
-    #
-    #     @self.app.callback(Output(component_id='proj-header', component_property='children'),
-    #                        [Input(component_id='proj-picker', component_property='value')])
-    #     def picked_proj(selected_proj):
-    #         self.working_proj = self.parser_data_dict[selected_proj]
-    #         return self.working_proj
-
     def build_display(self):
+        # The following are lists created that are used in the dropdown boxes displayed on the Dashboard.
         proj_options = [{'label': proj, 'value': proj} for proj in self.parser_data_dict]
-        plate_options = [{'label': plate, 'value': plate} for plate in self.stacked_display_df["Plate"].unique()]
-        column_options = [{'label': column, 'value': column} for column in self.stacked_display_df.columns]
+        plate_options = [{'label': plate, 'value': plate} for plate in self.all_stacked_df["Plate"].unique()]
+        column_options = [{'label': column, 'value': column} for column in self.all_stacked_df.columns]
         corr_plate_options = [{'label': corr_plate,
-                               'value': corr_plate} for corr_plate in self.stacked_display_df["Plate"].apply(lambda x: x.split('-')[0]).unique()]
-        # print(stacked_display_df["Plate"].unique()[0])
+                               'value': corr_plate} for corr_plate in self.all_stacked_df["Plate"].apply(lambda x: x.split('-')[0]).unique()]
+        # The following uses core components and html components contained within the dash package
+        # This section creates and formats the visual look of the Dashboard.
         self.app.layout = html.Div([
-            dcc.Store(id='proj-output'),
-            dcc.Dropdown(id='proj-picker', options=proj_options, value=proj_options[0]),
-
             html.Div([
                 dcc.Markdown(id='graph-1-heading', children=f"# Data Analysis for Projects")],
-                style={'color': 'black', 'margin':'50px 0px 50px 20px'}),
+                style={'color': 'black', 'margin': '50px 0px 50px 20px'}),
+
+            # dcc.Store allows storage of dataframe filtered by a project
+            dcc.Store(id='proj-output'),
+            dcc.Dropdown(id='proj-picker', options=proj_options, value=list(self.parser_data_dict.keys())[0]),
+
             html.Hr(),
 
             html.Div([
                 dcc.Dropdown(id='plate-picker',
                              options=plate_options,
-                             value=self.stacked_display_df["Plate"].unique()[0],
+                             value=self.all_stacked_df["Plate"].unique()[0],
                              style={'margin': '0px 20px', 'width':'50%'}),
                 dcc.Graph(id='graph')
             ]),
@@ -115,23 +118,40 @@ class BuildDashboard:
 
         ], style={'marginLeft': '20px'})
 
+        # The next section allows for the interactivity of the Dashboard. @app.callback will receive dashboard inputs
+        # pass the inputs into the function below, and return the desired output information
         @self.app.callback(Output(component_id='proj-output', component_property='data'),
                            [Input(component_id='proj-picker', component_property='value')])
         def picked_proj(selected_proj):
-            filtered_proj_df = self.all_stacked_df[self.all_stacked_df["SSF_exp"]]
-            return filtered_proj_df
+            """
+
+            :param selected_proj: receives user selected project from the dashboard dropdown
+            :return: A filtered dataframe based on the chosen project
+            """
+            filtered_proj_df = self.all_stacked_df[self.all_stacked_df["SSF_exp"] == selected_proj]
+            return filtered_proj_df.to_dict('records')
 
         @self.app.callback(Output(component_id='graph', component_property='figure'),
                            [Input(component_id='proj-output', component_property='data'),
                             Input(component_id='plate-picker', component_property='value')])
         def update_figure(data, selected_plate):
-            # by_plate_df = self.stacked_display_df[self.stacked_display_df["Plate"] == selected_plate]
-            by_plate_df = data[data["Plate"] == selected_plate]
-            proj_name = data["SSF_exp"].unique()[0]
-            # traces = []
-            # for well in by_plate_df["Well_Id"].unique():
-            #     sample_trace_df = by_plate_df[by_plate_df["Well_Id"] == well]
-            #     traces.append(go.Scatter(x=sample_trace_df["Volumes"], y=sample_trace_df["Alpha"], mode='markers+lines', name=well))
+            """
+
+            :param data: receives stored, filtered dataframe from selected project
+            :param selected_plate: receives plate selected for analysis on first graph
+            :return: a graph based on the selected data
+            """
+            if data is None:
+                raise PreventUpdate
+
+            # dict data is converted to df for plotly graph
+            df = pd.DataFrame.from_dict(data)
+
+            # df is filtered by dropdown user selected plate
+            by_plate_df = df[df["Plate"] == selected_plate]
+            proj_name = df["SSF_exp"].unique()[0]
+
+            # graph is built for display
             traces = px.line(x=by_plate_df["Volumes"],
                     y=by_plate_df["Alpha"],
                     color=by_plate_df['Sample_type'],
@@ -159,12 +179,22 @@ class BuildDashboard:
             return fig
 
         @self.app.callback(Output(component_id='graph2', component_property='figure'),
-                     [Input(component_id='proj-picker', component_property='data'),
+                     [Input(component_id='proj-output', component_property='data'),
                       Input(component_id='column-picker', component_property='value')])
         def update_traces(data, selected_column):
+            """
+
+            :param data: receives stored, filtered dataframe from selected project
+            :param selected_column: receives column selected for analysis on second graph with all traces
+            :return: facet grid graph that displays traces based on desired selected dropdown
+            """
+            if data is None:
+                raise PreventUpdate
+            df = pd.DataFrame(data)
             try:
-                proj_name = data["SSF_exp"].unique()[0]
-                traces = px.line(data,
+                proj_name = df["SSF_exp"].unique()[0]
+                # graph is built for display
+                traces = px.line(df,
                                  x="Volumes",
                                  y="Alpha",
                                  facet_col="Col",
@@ -174,6 +204,8 @@ class BuildDashboard:
                                  log_x=True,
                                  height=800, width=1200,
                                  title=proj_name)
+            # the following is error handling meant catch invalid column selected from dropdown; empty graph will
+            # be displayed
             except ValueError:
                 fig = go.Figure()
                 return fig
@@ -181,6 +213,7 @@ class BuildDashboard:
                 fig = go.Figure()
                 return fig
             else:
+                # if there are now issues with graph, the following format adjustments are made for aesthetics
                 traces.update_xaxes(tickangle=45,
                                     tickfont=dict(size=8),
                                     title_font=dict(size=10),
@@ -198,23 +231,36 @@ class BuildDashboard:
 
         @self.app.callback([Output(component_id='graph3', component_property='figure'),
                             Output(component_id='corr-output', component_property='children')],
-                           [Input(component_id='proj-picker', component_property='data'),
+                           [Input(component_id='proj-output', component_property='data'),
                             Input(component_id='rep-picker', component_property='value')])
         def corr_analysis(data, corr_plate):
-            corr_plate_df = data[data["Plate"].str.startswith(corr_plate)]
+            """
+
+            :param data: receives stored, filtered dataframe from selected project
+            :param corr_plate: receives plate selected for replicate analysis on third graph
+            :return: scatter plot graph based on selected source plate; also pearson correlation value and p-value
+            for display
+            """
+            if data is None:
+                raise PreventUpdate
+            df = pd.DataFrame(data)
+            corr_plate_df = df[df["Plate"].str.startswith(corr_plate)]
+            # the dataframe here is filtered to create separate df for main data and replicate data
             sample_type = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)][
                 "Sample_type"].values
             well_id = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)]["Well_Id"].values
             main_alpha = corr_plate_df[corr_plate_df["Plate"].str.contains("-1", case=False)]["Alpha"].values
             rep_alpha = corr_plate_df[corr_plate_df["Plate"].str.contains("-2", case=False)]["Alpha"].values
-            proj_name = data["SSF_exp"].unique()[0]
+            proj_name = df["SSF_exp"].unique()[0]
             try:
+                # graph is built to analysis main data against replicate data
                 corr_plot = px.scatter(x=main_alpha,
                                        y=rep_alpha,
                                        color=sample_type,
                                        width=800,
                                        height=800,
                                        title=f"{proj_name}: {corr_plate}")
+            # empty graph and correlation value returned if the selected plate has no replicate data to compare
             except ValueError:
                 fig = go.Figure()
                 corr_value = "No correlation"
@@ -238,11 +284,15 @@ class BuildDashboard:
                 corr_value = f"Correlation: {str(round(pcorr, 4))}  |  p-value: {str(round(pvalue, 4))}"
                 return fig, corr_value
 
+        # this code is required to run the app and dashboard - app is run only on local server
         self.app.run_server(
-            debug=True,
+            debug=False,
             use_reloader=False
         )
 
 
 if __name__ == "__main__":
-    BuildDashboard()
+    with open("../parser_data.json", "r") as update_parser_file:
+        proj_data_dict = json.load(update_parser_file)
+
+    BuildDashboard(proj_data_dict)
