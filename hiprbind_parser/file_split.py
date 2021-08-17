@@ -30,7 +30,7 @@ def split_projects(proj_dict):
                         plate_rows = [row for idx, row in enumerate(reader) if idx in range(copy_start_row, copy_end_row)]
                         copy_start_row = copy_end_row
 
-                        raw_output = folder_path_raw + '/' + proj_name + '.csv'
+                        raw_output = folder_path_raw + '/' + proj_name + '_raw.csv'
                         with open(raw_output, 'w', newline="") as newFile:
                             csv_writer = csv.writer(newFile)
                             for row in plate_rows:
