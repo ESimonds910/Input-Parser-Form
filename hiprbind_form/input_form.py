@@ -1,32 +1,54 @@
+# Ipywidgets is a package imported to create an interactive form to capture user inputs
 import ipywidgets as ipw
 from IPython.display import display
 from ipywidgets import Layout
-import plotly.express as px
+
+# This package is used for data validation
 from string import ascii_uppercase as upstr
+
+# The data captured is packed into a json file in a dictionary
 import json
 
 STYLE = {'description_width': 'initial'}
 
 
 class DisplayImage:
+    """
+    This class display's the AbSci logo on the form. The image must be contained in the relative folder
+    in order to be displayed.
+
+    """
     img_path = open('AbSciImg.jfif', 'rb')
     img = img_path.read()
     display(ipw.Image(value=img, format='jfif', height='200px', width='200px'))
 
 
 class InputForm:
+    """
+    This class is called by the 'parser_form.ipynb, a jupyter notebook, and is responsible for the widgets
+    displayed on the input form.
+
+    """
 
     def __init__(self):
+        """
+        The widgets displayed are defined based on the required or desired input. Initial empty
+        dictionaries and json file are created for future use.
+
+        """
         self.proj_dict = {}
         self.std_dict_all = {}
         with open('parser_data.json', 'w') as parser_file:
             json.dump(self.proj_dict, parser_file, indent=4)
+
+        # Widgets that capture required data
         self.proj_name = ipw.Text(placeholder="e.g. SSFXXXXX or SOMXXXXX")
         self.point_choice = ipw.Dropdown(options=[('Four', 4), ('Eight', 8)])
         self.plates = ipw.Text(placeholder="e.g. P1, P2 or P1-1, P1-2, P2")
         self.d_vols = ipw.Text(placeholder="e.g. 2, 1, 0.5, 0.25 or 2 1 0.5 0.25")
         self.check = ipw.Checkbox(indent=False)
 
+        # Widgets that capture standard curve inputs, including button to add to dictionary, and display layout
         self.loc = ipw.Dropdown(options=["Column", "Row"])
         self.well_loc = ipw.Text(placeholder="e.g. A11 or G01")
         self.std_conc = ipw.Text(placeholder="e.g. 100, 50, 25 or 100 50 25")
@@ -36,17 +58,21 @@ class InputForm:
         self.add_stc_button.on_click(self.add_standard)
         self.vbox_stc_result = ipw.VBox([self.add_stc_button, self.stc_out])
 
-        self.button_update = ipw.Button(
-            description='Add Project',
-            button_style='info'
-        )
+        # Button to add all data to main dictionary, and display layout
+        self.button_update = ipw.Button(description='Add Project', button_style='info')
         self.output = ipw.Output(layout={'border': '1px solid black'})
         self.button_update.on_click(self.on_button_click)
         self.vbox_result = ipw.VBox([self.button_update, self.output])
 
+        # Calls display function responsible for display of above defined widgets
         self.display_inputs()
 
     def display_inputs(self):
+        """
+        Function called to display widgets on form to capture inputs. Widgets will appear on form in the order
+        listed in display function. Labels are also created to provide description of widget on form.
+
+        """
         display(
             ipw.Label("Enter project name:"),
             self.proj_name,
@@ -74,6 +100,17 @@ class InputForm:
         )
 
     def on_button_click(self, event):
+        """
+        This function is called upon the user button-click of the 'Add Project' button on the user form.
+        This function includes data validation to ensure correct/valid inputs, writes correct/valid input data to
+        dictionary, which is then written to the 'parser_data.json' file.
+
+        :param event: this parameter is not used in function but necessary for 'event' to occur upon user
+        button-click on the form.
+
+        :return: this function will return an empty standard curve dictionary in case additionally added projects
+        require different standard curve data. 
+        """
         self.stc_out.clear_output()
         self.output.clear_output()
         all_valid = True
