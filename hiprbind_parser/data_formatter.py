@@ -70,6 +70,10 @@ def build_columns(df, plate, proj_data, w_idx, df_id="main"):
 
     df.insert(0, "Plate", plate)
     df.insert(1, "Well_Id", well_ids[w_idx])
+    df.insert(2, "Volume_1", volumes[0])
+    df.insert(3, "Volume_2", volumes[1])
+    df.insert(4, "Volume_3", volumes[2])
+    df.insert(5, "Volume_4", volumes[3])
     df.insert(0, "Id", plate.split("-")[0] + "-" + df["Well_Id"])
     df.insert(0, "Unique_Id", proj_name + "-" + df["Id"])
     return df
@@ -97,8 +101,20 @@ def data_format(source, proj_data):
                 dna_col = col + 24
                 dna_col_2 = dna_col + 1
 
-                alpha_quad = list(source.iloc[row][[col, col_2]]) + list(source.iloc[row_2][[col, col_2]])
-                dna_quad = list(source.iloc[row][[dna_col, dna_col_2]]) + list(source.iloc[row_2][[dna_col, dna_col_2]])
+                # alpha_quad = list(source.iloc[row][[col, col_2]]) + list(source.iloc[row_2][[col, col_2]])
+                alpha_quad = [
+                    source.iloc[row][col],
+                    source.iloc[row_2][col],
+                    source.iloc[row][col_2],
+                    source.iloc[row_2][col_2]
+                ]
+                # dna_quad = list(source.iloc[row][[dna_col, dna_col_2]]) + list(source.iloc[row_2][[dna_col, dna_col_2]])
+                dna_quad = [
+                    source.iloc[row][dna_col],
+                    source.iloc[row_2][dna_col], 
+                    source.iloc[row][dna_col_2],
+                    source.iloc[row_2][dna_col_2]
+                ]
 
                 main_df_columns = [f"Alpha_{n}" for n in range(1, 5)] + [f"DNA_{n}" for n in range(1, 5)]
                 if points == 8:
