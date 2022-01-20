@@ -9,6 +9,7 @@ from dash.exceptions import PreventUpdate
 # import packages required to build graphs
 import plotly.graph_objects as go
 import plotly.express as px
+from plotly.subplots import make_subplots
 
 # import packages to create dataframes for data and statistical analysis
 import pandas as pd
@@ -61,6 +62,7 @@ class BuildDashboard:
         proj_options = [{'label': proj, 'value': proj} for proj in self.parser_data_dict]
         # plate_options = [{'label': plate, 'value': plate} for plate in self.all_stacked_df["Plate"].unique()]
         column_options = [{'label': column, 'value': column} for column in self.all_stacked_df.columns]
+        trace_options = [{'label': "Alpha Values", 'value': 'Alpha'}, {'label': 'DNA Values', 'value': 'DNA'}]
         # corr_plate_options = [{'label': corr_plate,
         #                        'value': corr_plate} for corr_plate in self.all_stacked_df["Plate"].apply(lambda x: x.split('-')[0]).unique()]
         # The following uses core components and html components contained within the dash package
@@ -81,9 +83,13 @@ class BuildDashboard:
                 dcc.Dropdown(id='column-picker',
                              options=column_options,
                              value="Plate",
-                             style={'margin': '0px 20px', 'width': '50%'}),
+                             style={'display': 'inline-block', 'margin': '0px 20px', 'width': '50%'}),
+                dcc.Dropdown(id='value-picker',
+                             options=trace_options,
+                             value="Alpha",
+                             style={'display': 'inline-block', 'margin': '5px 20px', 'width': '50%'}),
                 dcc.Graph(id='graph2')
-            ]),
+            ], style={'display': 'inline-block'}),
 
             html.Hr(),
 
@@ -210,13 +216,15 @@ class BuildDashboard:
         @self.app.callback(Output(component_id='graph2', component_property='figure'),
                      [Input(component_id='proj-output', component_property='data'),
                       Input(component_id='proj-name', component_property='data'),
-                      Input(component_id='column-picker', component_property='value')])
-        def update_traces(data, proj_name, selected_column):
+                      Input(component_id='column-picker', component_property='value'),
+                      Input(component_id='value-picker', component_property='value')])
+        def update_traces(data, proj_name, selected_column, selected_trace):
             """
 
             :param data: receives stored, filtered dataframe from selected project
             :param proj_name: receives selected project name
             :param selected_column: receives column selected for analysis on second graph with all traces
+            :param selected_trace: chosen choice between 'Alpha' or 'DNA' values
             :return: facet grid graph that displays traces based on desired selected dropdown
             """
             if data is None or selected_column is None:
@@ -224,9 +232,10 @@ class BuildDashboard:
             df = pd.DataFrame(data)
             try:
                 # graph is built for display
+                # subfig = make_subplots(specs=[[{"secondary_y": True}]])
                 traces = px.line(df,
                                  x="Volumes",
-                                 y="Alpha",
+                                 y=selected_trace,
                                  facet_col="Col",
                                  facet_row="Row",
                                  color=selected_column,
@@ -234,6 +243,18 @@ class BuildDashboard:
                                  log_x=True,
                                  height=800, width=1200,
                                  title=proj_name)
+
+                # traces2 = px.line(
+                #         df,
+                #         x="Volumes",
+                #         y="DNA",
+                #         facet_col="Col",
+                #         facet_row="Row",
+                #         color=selected_column,
+                #         line_group="Plate",
+                #         log_x=True,
+                #         height=800, width=1200
+                #     )
             # the following is error handling meant catch invalid column selected from dropdown; empty graph will
             # be displayed
             except ValueError:
@@ -255,8 +276,14 @@ class BuildDashboard:
                                     showline=True,
                                     linecolor='grey')
                 traces.update_traces(line=dict(width=0.8))
+
                 traces.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))
+
+                # traces2.update_traces(yaxis='y2')
+                # subfig.add_traces(traces.data + traces2.data)
+                # subfig.layout.yaxis2.title="DNA"
                 fig = go.Figure(traces)
+                # fig = go.Figure(subfig)
                 return fig
 
         @self.app.callback([Output(component_id='graph3', component_property='figure'),

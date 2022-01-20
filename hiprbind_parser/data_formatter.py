@@ -111,7 +111,7 @@ def data_format(source, proj_data):
                 # dna_quad = list(source.iloc[row][[dna_col, dna_col_2]]) + list(source.iloc[row_2][[dna_col, dna_col_2]])
                 dna_quad = [
                     source.iloc[row][dna_col],
-                    source.iloc[row_2][dna_col], 
+                    source.iloc[row_2][dna_col],
                     source.iloc[row][dna_col_2],
                     source.iloc[row_2][dna_col_2]
                 ]
